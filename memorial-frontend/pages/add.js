@@ -6,7 +6,8 @@ export default function AddMemorial() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await axios.post("http://localhost:5000/memorials", form);
+    await axios.post("memorial-production.up.railway.app", form);
+
     alert("Memorial Added");
   };
 
