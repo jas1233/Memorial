@@ -1,50 +1,36 @@
-import express from "express";
-import mongoose from "mongoose";
-import dotenv from "dotenv";
-import cors from "cors";
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+require("dotenv").config();
 
-dotenv.config();
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-const PORT = process.env.PORT || 5000;
+mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}).then(() => console.log("MongoDB Connected"))
-  .catch(err => console.error(err));
-
-// Memorial Model
-const memorialSchema = new mongoose.Schema({
+const MemorialSchema = new mongoose.Schema({
   name: String,
-  birthDate: String,
-  deathDate: String,
-  tribute: String,
+  message: String,
 });
 
-const Memorial = mongoose.model("Memorial", memorialSchema);
+const Memorial = mongoose.model("Memorial", MemorialSchema);
 
-// Routes
+// Get all memorials
 app.get("/api/memorials", async (req, res) => {
-  try {
-    const memorials = await Memorial.find();
-    res.status(200).json(memorials);
-  } catch (error) {
-    res.status(500).json({ error: "Error fetching memorials" });
-  }
+  const memorials = await Memorial.find();
+  res.json(memorials);
 });
 
+// Add a new memorial
 app.post("/api/memorials", async (req, res) => {
-  try {
-    const newMemorial = new Memorial(req.body);
-    await newMemorial.save();
-    res.status(201).json(newMemorial);
-  } catch (error) {
-    res.status(500).json({ error: "Error creating memorial" });
-  }
+  const { name, message } = req.body;
+  if (!name || !message) return res.status(400).json({ error: "All fields are required" });
+
+  const newMemorial = new Memorial({ name, message });
+  await newMemorial.save();
+  res.status(201).json(newMemorial);
 });
 
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
