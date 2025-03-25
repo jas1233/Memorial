@@ -5,7 +5,7 @@ export default function Home() {
   const [memorials, setMemorials] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:5000/memorials").then(res => setMemorials(res.data));
+    await axios.post("memorial-production.up.railway.app", form);
   }, []);
 
   return (
