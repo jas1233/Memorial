@@ -1,52 +1,50 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-require("dotenv").config();
+import express from "express";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import cors from "cors";
 
+dotenv.config();
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, {
+const PORT = process.env.PORT || 5000;
+
+// MongoDB Connection
+mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-})
-  .then(() => console.log("DB Connected"))
-  .catch((err) => console.error("DB Connection Error:", err));
+}).then(() => console.log("MongoDB Connected"))
+  .catch(err => console.error(err));
 
-// Define Memorial Schema
-const MemorialSchema = new mongoose.Schema({
+// Memorial Model
+const memorialSchema = new mongoose.Schema({
   name: String,
   birthDate: String,
   deathDate: String,
-  message: String,
-  image: String,
+  tribute: String,
 });
 
-const Memorial = mongoose.model("Memorial", MemorialSchema);
+const Memorial = mongoose.model("Memorial", memorialSchema);
 
-// Add a new Memorial
-app.post("/memorials", async (req, res) => {
-  try {
-    const memorial = new Memorial(req.body);
-    await memorial.save();
-    res.json({ message: "Memorial Added" });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to add memorial" });
-  }
-});
-
-// Get all Memorials
-app.get("/memorials", async (req, res) => {
+// Routes
+app.get("/api/memorials", async (req, res) => {
   try {
     const memorials = await Memorial.find();
-    res.json(memorials);
+    res.status(200).json(memorials);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch memorials" });
+    res.status(500).json({ error: "Error fetching memorials" });
   }
 });
 
-// Start the server
-const PORT = process.env.PORT || 5000;
+app.post("/api/memorials", async (req, res) => {
+  try {
+    const newMemorial = new Memorial(req.body);
+    await newMemorial.save();
+    res.status(201).json(newMemorial);
+  } catch (error) {
+    res.status(500).json({ error: "Error creating memorial" });
+  }
+});
+
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
