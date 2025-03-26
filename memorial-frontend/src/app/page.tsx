@@ -1,94 +1,140 @@
-"use client";
-import { useEffect, useState } from "react";
+'use client';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-interface Memorial {
-  _id: string;
-  name: string;
-  message: string;
-}
+export default function CreateMemorial() {
+  const [formData, setFormData] = useState({
+    name: '',
+    birthDate: '',
+    deathDate: '',
+    biography: '',
+    imageUrl: '',
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
 
-export default function Home() {
-  const [memorials, setMemorials] = useState<Memorial[]>([]);
-  const [name, setName] = useState("");
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
-  useEffect(() => {
-    async function fetchMemorials() {
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/memorials`);
-        if (!res.ok) throw new Error("Failed to fetch data");
-        const data = await res.json();
-        setMemorials(data);
-      } catch (err: any) {
-        setError(err.message);
-      }
-    }
-    fetchMemorials();
-  }, []);
-
-  async function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !message) return;
-
+    setIsSubmitting(true);
+    
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/memorials`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, message }),
+      const response = await fetch('/api/memorials', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          createdBy: 'Anonymous', // Replace with actual user if authenticated
+        }),
       });
 
-      if (!res.ok) throw new Error("Failed to add memorial");
-
-      const newMemorial = await res.json();
-      setMemorials((prev) => [...prev, newMemorial]);
-
-      // Clear form
-      setName("");
-      setMessage("");
-    } catch (err: any) {
-      setError(err.message);
+      if (response.ok) {
+        const data = await response.json();
+        router.push(`/memorials/${data._id}`);
+      }
+    } catch (error) {
+      console.error('Error creating memorial:', error);
+    } finally {
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
-    <main className="p-10 text-center">
-      <h1 className="text-4xl font-bold">Memorials</h1>
-      {error && <p className="text-red-500">{error}</p>}
+    <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">Create a Memorial</h1>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+            Name
+          </label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            required
+            value={formData.name}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+          />
+        </div>
 
-      {/* Memorial Form */}
-      <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-        <input
-          type="text"
-          placeholder="Enter Name"
-          className="border p-2 w-full"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <textarea
-          placeholder="Enter Message"
-          className="border p-2 w-full"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-        />
-        <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">
-          Add Memorial
-        </button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label htmlFor="birthDate" className="block text-sm font-medium text-gray-700">
+              Birth Date
+            </label>
+            <input
+              type="date"
+              id="birthDate"
+              name="birthDate"
+              required
+              value={formData.birthDate}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="deathDate" className="block text-sm font-medium text-gray-700">
+              Death Date
+            </label>
+            <input
+              type="date"
+              id="deathDate"
+              name="deathDate"
+              required
+              value={formData.deathDate}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700">
+            Image URL (optional)
+          </label>
+          <input
+            type="url"
+            id="imageUrl"
+            name="imageUrl"
+            value={formData.imageUrl}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="biography" className="block text-sm font-medium text-gray-700">
+            Biography
+          </label>
+          <textarea
+            id="biography"
+            name="biography"
+            rows={6}
+            required
+            value={formData.biography}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+          />
+        </div>
+
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? 'Creating...' : 'Create Memorial'}
+          </button>
+        </div>
       </form>
-
-      {/* Memorial List */}
-      <div className="mt-5">
-        {memorials.length > 0 ? (
-          memorials.map((memorial) => (
-            <div key={memorial._id} className="border p-4 my-2">
-              <h2 className="text-xl font-semibold">{memorial.name}</h2>
-              <p>{memorial.message}</p>
-            </div>
-          ))
-        ) : (
-          <p>No memorials found.</p>
-        )}
-      </div>
-    </main>
+    </div>
   );
 }
