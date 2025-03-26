@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import connectToDatabase from "memorial-backend/lib/mongodb.ts";
+import connectToDatabase from "Memorial/memorial-backend/lib/mongodb.ts";
 import Memorial from "@/models/memorial";
 
 export async function GET() {
